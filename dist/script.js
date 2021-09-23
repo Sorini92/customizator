@@ -2042,68 +2042,132 @@ function () {
 
     this.btnBlock = document.createElement('div');
     this.colorPicker = document.createElement('input');
+    this.clear = document.createElement('div');
+    this.activeBtn = localStorage.getItem('activeBtn') || this.btns[0];
+    this.scale = localStorage.getItem('scale') || 1;
+    this.color = localStorage.getItem('color') || '#ffffff';
+    this.btns = this.btnBlock.children;
     this.btnBlock.addEventListener('click', function (e) {
       return _this.onScaleChange(e);
     });
     this.colorPicker.addEventListener('input', function (e) {
       return _this.onColorChange(e);
     });
+    this.clear.addEventListener('click', function () {
+      return _this.reset();
+    });
   }
 
   _createClass(Customizator, [{
     key: "onScaleChange",
     value: function onScaleChange(e) {
-      var scale;
+      var _this2 = this;
+
       var body = document.querySelector('body');
 
-      if (e.target.value) {
-        scale = +e.target.value.replace(/x/g, '');
-      }
+      try {
+        if (e) {
+          this.scale = +e.target.value.replace(/x/g, '');
+          this.btns.forEach(function (btn) {
+            btn.classList.remove('active');
+          });
+          e.target.classList.add('active');
+          this.activeBtn = document.querySelector('.active').getAttribute('data-size'); //console.log(this.activeBtn);
 
-      function recursy(element) {
+          console.log(document.querySelector("[data-size=".concat(this.activeBtn, "]")));
+        }
+      } catch (_unused) {}
+
+      var recursy = function recursy(element) {
         element.childNodes.forEach(function (node) {
           if (node.nodeName === '#text' && node.nodeValue.replace(/\s+/g, '').length > 0) {
             if (!node.parentNode.getAttribute('data-fz')) {
               var value = window.getComputedStyle(node.parentNode, null).fontSize;
               node.parentNode.setAttribute('data-fz', +value.replace(/px/g, ''));
-              node.parentNode.style.fontSize = node.parentNode.getAttribute('data-fz') * scale + 'px';
+              node.parentNode.style.fontSize = node.parentNode.getAttribute('data-fz') * _this2.scale + 'px';
             } else {
-              node.parentNode.style.fontSize = node.parentNode.getAttribute('data-fz') * scale + 'px';
+              node.parentNode.style.fontSize = node.parentNode.getAttribute('data-fz') * _this2.scale + 'px';
             }
           } else {
             recursy(node);
           }
         });
-      }
+      };
 
       recursy(body);
+      localStorage.setItem('scale', this.scale);
+      localStorage.setItem('activeBtn', this.activeBtn);
+      console.log(localStorage.getItem('activeBtn'));
     }
   }, {
     key: "onColorChange",
     value: function onColorChange(e) {
       var body = document.querySelector('body');
       body.style.backgroundColor = e.target.value;
+      localStorage.setItem('color', e.target.value);
+    }
+  }, {
+    key: "setBgColor",
+    value: function setBgColor() {
+      var body = document.querySelector('body');
+      body.style.backgroundColor = this.color;
+      this.colorPicker.value = this.color;
+    }
+  }, {
+    key: "setActiveBtn",
+    value: function setActiveBtn() {
+      this.btns.forEach(function (btn) {
+        btn.classList.remove('active');
+      });
+      document.querySelector("[data-size=".concat(this.activeBtn, "]")).classList.add('active'); //localStorage.setItem('activeBtn', this.activeBtn);
+    }
+  }, {
+    key: "injectStyle",
+    value: function injectStyle() {
+      var style = document.createElement('style');
+      style.innerHTML = "\n            .panel {\n                display: flex;\n                justify-content: space-around;\n                align-items: center;\n                position: fixed;\n                top: 10px;\n                right: 0;\n                border: 1px solid rgba(0,0,0, .2);\n                box-shadow: 0 0 20px rgba(0,0,0, .5);\n                width: 300px;\n                height: 60px;\n                background-color: #fff;\n            \n            }\n            .scale {\n                display: flex;\n                justify-content: space-around;\n                align-items: center;\n                width: 100px;\n                height: 40px;\n            }\n            .scale_btn {\n                display: block;\n                width: 40px;\n                height: 40px;\n                border: 1px solid rgba(0,0,0, .2);\n                border-radius: 4px;\n                font-size: 18px;\n            }\n            .scale_btn:hover {\n                transform: scale(1.2);\n                border: 1px solid black;\n                box-shadow: 3px 3px 3px black;\n            }\n            .color {\n                width: 40px;\n                height: 40px;\n            }\n            .clear {\n                font-size: 40px;\n                cursor: pointer;\n            }\n            .active {\n                background-color: #b5affd;\n            }\n        ";
+      document.querySelector('head').appendChild(style);
+    }
+  }, {
+    key: "reset",
+    value: function reset() {
+      localStorage.clear();
+      this.scale = 1;
+      this.color = '#ffffff';
+      this.setBgColor();
+      this.onScaleChange();
+      this.btns.forEach(function (btn) {
+        btn.classList.remove('active');
+      });
     }
   }, {
     key: "render",
     value: function render() {
+      this.injectStyle();
+      this.setBgColor();
+      this.onScaleChange();
       var scaleInputS = document.createElement('input'),
           scaleInputM = document.createElement('input'),
           panel = document.createElement('div');
-      panel.append(this.btnBlock, this.colorPicker);
-      scaleInputS.classList.add('scale_btn');
+      panel.append(this.btnBlock, this.colorPicker, this.clear);
+      this.clear.innerHTML = "&times";
+      this.clear.classList.add('clear');
+      scaleInputS.classList.add('scale_btn', 'active');
       scaleInputM.classList.add('scale_btn');
       this.btnBlock.classList.add('scale');
       this.colorPicker.classList.add('color');
       scaleInputS.setAttribute('type', 'button');
       scaleInputS.setAttribute('value', '1x');
+      scaleInputS.setAttribute('data-size', 'small');
       scaleInputM.setAttribute('type', 'button');
       scaleInputM.setAttribute('value', '1.5x');
+      scaleInputM.setAttribute('data-size', 'big');
       this.colorPicker.setAttribute('type', 'color');
       this.colorPicker.setAttribute('value', '#ffffff');
       this.btnBlock.append(scaleInputS, scaleInputM);
       panel.classList.add('panel');
       document.querySelector('body').append(panel);
+      this.setActiveBtn();
     }
   }]);
 
