@@ -3,7 +3,7 @@ export default class Customizator {
         this.btnBlock = document.createElement('div');
         this.colorPicker = document.createElement('input');
         this.clear = document.createElement('div');
-        this.activeBtn = localStorage.getItem('activeBtn') || this.btns[0];
+        this.activeBtn = localStorage.getItem('activeBtn') || "small";
         this.scale = localStorage.getItem('scale') || 1;
         this.color = localStorage.getItem('color') || '#ffffff';
         this.btns = this.btnBlock.children;
